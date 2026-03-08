@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Mini App</title>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:system-ui;
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+color:white;
+min-height:100vh;
+}
+
+.container{
+max-width:700px;
+margin:auto;
+padding:20px;
+}
+
+h1{
+text-align:center;
+margin-bottom:20px;
+}
+
+.search{
+display:flex;
+gap:10px;
+margin-bottom:10px;
+}
+
+input{
+flex:1;
+padding:12px;
+border-radius:10px;
+border:none;
+font-size:16px;
+}
+
+button{
+padding:12px 16px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+font-weight:bold;
+background:#ffd54f;
+}
+
+button:hover{
+opacity:.9;
+}
+
+.current{
+margin-top:20px;
+background:rgba(255,255,255,0.1);
+padding:20px;
+border-radius:16px;
+backdrop-filter:blur(8px);
+}
+
+.current h2{
+margin:0;
+}
+
+.temp{
+font-size:40px;
+margin:10px 0;
+}
+
+.details{
+display:flex;
+gap:20px;
+}
+
+.forecast{
+margin-top:25px;
+}
+
+.forecast-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+gap:10px;
+margin-top:10px;
+}
+
+.card{
+background:rgba(255,255,255,0.1);
+padding:15px;
+border-radius:12px;
+text-align:center;
+}
+
+.loading{
+text-align:center;
+margin-top:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Ob havo</h1>
+
+<div class="search">
+<input id="cityInput" placeholder="Shahar nomi">
+<button onclick="searchCity()">Izlash</button>
+</div>
+
+<button onclick="getLocation()">Meni hududim</button>
+
+<div id="loading" class="loading"></div>
+
+<div id="current" class="current"></div>
+
+<div class="forecast">
+<h2>5 kunlik malumot</h2>
+<div id="forecast" class="forecast-grid"></div>
+</div>
+
+</div>
+
+<script>
+
+const API_KEY = "b7471e1943c50ff2ac76cec9bb4fdc81"
+
+const loading = document.getElementById("loading")
+const currentBox = document.getElementById("current")
+const forecastBox = document.getElementById("forecast")
+
+function setLoading(text){
+loading.innerText=text
+}
+
+async function searchCity(){
+
+const city=document.getElementById("cityInput").value
+
+if(!city) return
+
+setLoading("Loading...")
+
+const res=await fetch(
+`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
+)
+
+const data=await res.json()
+
+renderCurrent(data)
+
+getForecast(data.coord.lat,data.coord.lon)
+
+setLoading("")
+}
+
+function getLocation(){
+
+navigator.geolocation.getCurrentPosition(async pos=>{
+
+setLoading("Loading location...")
+
+const lat=pos.coords.latitude
+const lon=pos.coords.longitude
+
+const res=await fetch(
+`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+)
+
+const data=await res.json()
+
+renderCurrent(data)
+
+getForecast(lat,lon)
+
+setLoading("")
+
+})
+
+}
+
+function renderCurrent(data){
+
+currentBox.innerHTML=`
+
+<h2>${data.name}</h2>
+
+<div class="temp">${Math.round(data.main.temp)}°C</div>
+
+<p>${data.weather[0].description}</p>
+
+<div class="details">
+
+<div>Humidity: ${data.main.humidity}%</div>
+
+<div>Wind: ${data.wind.speed} m/s</div>
+
+</div>
+
+`
+
+}
+
+async function getForecast(lat,lon){
+
+const res=await fetch(
+`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+)
+
+const data=await res.json()
+
+forecastBox.innerHTML=""
+
+const days={}
+
+data.list.forEach(item=>{
+
+const date=item.dt_txt.split(" ")[0]
+
+if(!days[date]){
+
+days[date]=item
+
+}
+
+})
+
+Object.values(days).slice(0,5).forEach(day=>{
+
+const el=document.createElement("div")
+
+el.className="card"
+
+el.innerHTML=`
+
+<h4>${day.dt_txt.split(" ")[0]}</h4>
+
+<div>${Math.round(day.main.temp)}°C</div>
+
+<div>${day.weather[0].main}</div>
+
+`
+
+forecastBox.appendChild(el)
+
+})
+
+}
+
+window.onload=()=>{
+
+searchDefault()
+
+}
+
+async function searchDefault(){
+
+const city="Tashkent"
+
+const res=await fetch(
+`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
+)
+
+const data=await res.json()
+
+renderCurrent(data)
+
+getForecast(data.coord.lat,data.coord.lon)
+
+}
+
+if(window.Telegram){
+
+Telegram.WebApp.ready()
+
+}
+
+</script>
+
+</body>
+</html>
