@@ -286,6 +286,31 @@ Telegram.WebApp.ready()
 }
 
 </script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.ready();  // Mini App tayyorligini bildiradi
 
+  // Main Button ni sozlash (pastki o'ng burchakda chiqadi)
+  const mainButton = tg.MainButton;  // yoki tg.BottomButton (yangiroq versiyalarda)
+
+  mainButton.setText("Open App 😊");       // Matn + emoji
+  mainButton.setParams({
+    color: "#5288c1",                      // Ko'k rang (#RRGGBB formatida, o'zingiz xohlagan rangni qo'ying)
+    text_color: "#ffffff",                 // Matn rangi (oq)
+    is_visible: true,                      // Ko'rinishi
+    is_active: true                        // Bosilsa ishlaydi
+  });
+
+  // Tugma bosilganda nima bo'lishi (masalan, harakat bajarish)
+  mainButton.onClick(() => {
+    // Bu yerda kerakli logika: masalan, forma jo'natish yoki botga data yuborish
+    tg.sendData("open_action");  // Botga ma'lumot yuborish
+    // yoki alert("App ochildi!");
+  });
+
+  // Agar secondary button kerak bo'lsa (qo‘shimcha, chap/o'ng joylashtirsa bo'ladi)
+  // tg.SecondaryButton.setParams({...}); // Bot API 7.10+ da position: 'right' qo'yish mumkin
+</script>
 </body>
 </html>
